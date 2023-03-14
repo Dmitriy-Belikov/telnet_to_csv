@@ -1,26 +1,16 @@
-import tkinter
+
 from tkinter import *
 from tkinter.ttk import Combobox
 import asyncio, telnetlib3, datetime, csv
 import time
 from threading import Thread
+from tkcalendar import Calendar
 
 potok = True
 #Функция обработки значений
 async def shell(reader, writer):
-    day = int(dd.get())
-    month = int(mm.get())
-    year = int(gg.get())
-
-    if month < 10:
-        month = '0' + str(month)
-    if day < 10:
-        day = '0' + str(day)
-    date = str(day) + '.' + str(month) + '.' + str(year)
-
     global potok
-
-    nowdate = date
+    nowdate = calendar.get_date()
 
     dt_pc = datetime.datetime.today()  # Текущая дата компьютера для расчета дельты времени
 
@@ -47,7 +37,7 @@ async def shell(reader, writer):
         arr2 = []
         arr2.append(arr1)  # Костыль для нормальной записи csv (список в список)
         print(','.join(arr1))
-        with open('C:/CSV/orion_test_GUI.csv', 'a', newline='') as f:
+        with open('C:/CSV/orion.csv', 'a', newline='') as f:
             writer = csv.writer(f)
             for row in arr2:
                 writer.writerow(row)
@@ -64,7 +54,7 @@ async def shell(reader, writer):
 #Запуск телнет клиента и запуск функции shell
 def run():
     loop = asyncio.new_event_loop()
-    coro = telnetlib3.open_connection(host="127.0.0.1", port=2323, shell=shell)
+    coro = telnetlib3.open_connection(host="127.0.0.1", port=23, shell=shell)
     asyncio.set_event_loop(loop)
     reader, writer = loop.run_until_complete(coro)
     try:
@@ -75,37 +65,37 @@ def run():
 
 #Обработка кнопки запуск, блокировка ввода значений, проверка соединения, запуск функции run
 def button_run():
-
     text.delete(1.0, END)
     p1 = Thread(target=run, daemon=True)
     p1.start()# запускается функция в отдельном потоке
     global potok
     potok = True
     time.sleep(3)
+
+    '''
     if p1.is_alive() == False:
         text.insert(1.0, 'Не удалось соедениться!\nПроверьте настройки Orion\n')
     else:
         dd.config(state=DISABLED)
         mm.config(state=DISABLED)
         gg.config(state=DISABLED)
-        pass
+        pass'''
 #Обработка кнопки стоп, разблокировка ввода значений, остановка функции shell
 def button_stop():
     global potok
     potok = False
-    dd.config(state=NORMAL)
-    mm.config(state=NORMAL)
-    gg.config(state=NORMAL)
 
 
 
 #Код для GUI приложения
 window = Tk()
 window.title("Скрипт для ТетраСофт")
-window.geometry('520x700')
+window.geometry('500x700')
 
 lbl = Label(window, text='Выберите сегодняшнюю дату', font=('Calibri', 20))
 lbl.grid(row=0, column=0, columnspan=3, ipadx=10, ipady=6, padx=5, pady=5)
+
+
 
 btn_run = Button(window, text="Начать работу", command=button_run)
 btn_run.grid(row=5, column=0, columnspan=3, ipadx=70, ipady=6, padx=5, pady=5)
@@ -117,39 +107,8 @@ btn_stop.grid(row=6, column=0, columnspan=3, ipadx=70, ipady=6, padx=5, pady=5)
 text = Text(window,height=20,width=13)
 text.grid(row=7, column=0, columnspan=3, ipadx=190, ipady=1, padx=5, pady=5)
 
-
-#День
-ddlbl = Label(window, text='День', font=('Calibri', 12))
-ddlbl.grid(row=1, column=0, ipadx=10, ipady=6, padx=5, pady=5)
-dd = Combobox(window, state=NORMAL)
-darr = []
-for i in range(1, 32):
-    darr.append(i)
-dd['values'] = (darr)
-dd.current(0)  # установите вариант по умолчанию
-dd.grid(row=2, column=0, ipadx=10, ipady=6, padx=5, pady=5)
-
-#Месяц
-mmlbl = Label(window, text='Месяц', font=('Calibri', 12))
-mmlbl.grid(row=1, column=1, ipadx=10, ipady=1, padx=5, pady=5)
-mm = Combobox(window, state=NORMAL)
-marr = []
-for i in range(1, 13):
-    marr.append(i)
-mm['values'] = (marr)
-mm.current(0)  # установите вариант по умолчанию
-mm.grid(row=2, column=1, ipadx=10, ipady=6, padx=5, pady=5)
-
-#Год
-gglbl = Label(window, text='Год', font=('Calibri', 12))
-gglbl.grid(row=1, column=2, ipadx=70, ipady=6, padx=5, pady=5)
-gg = Combobox(window, state=NORMAL)
-garr = []
-for i in range(2022, 2027):
-    garr.append(i)
-gg['values'] = (garr)
-gg.current(0)  # установите вариант по умолчанию
-gg.grid(row=2, column=2, ipadx=10, ipady=6, padx=5, pady=5)
+calendar = Calendar(locale='ru_RU', date_pattern='dd.MM.yyyy')
+calendar.grid(row=1, column=0, columnspan=3, ipadx=1, ipady=1, padx=5, pady=5)
 
 
 window.mainloop()
